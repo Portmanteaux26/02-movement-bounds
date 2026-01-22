@@ -1,0 +1,4 @@
+In: Scaling difficulty, adding enemies to the screen at score intervals.
+    Goal is to gradually increase tension as player succeeds; each set of 5 coins should be harder to collect than the previous set.
+
+Out:  n/a
