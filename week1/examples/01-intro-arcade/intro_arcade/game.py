@@ -62,12 +62,15 @@ class Game:
         self.enemy_rects: list[pygame.Rect] = []
         self.enemy_vs: list[pygame.Vector2] = []
         for _ in range(3):
-            r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 36, 36)
-            v = pygame.Vector2(random.choice([-1, 1]) * 220, random.choice([-1, 1]) * 180)
-            self.enemy_rects.append(r)
-            self.enemy_vs.append(v)
+            self._spawn_enemy()
 
         self.coin = self._spawn_coin()
+
+    def _spawn_enemy(self) -> None:
+        r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 36, 36)
+        v = pygame.Vector2(random.choice([-1, 1]) * 220, random.choice([-1, 1]) * 180)
+        self.enemy_rects.append(r)
+        self.enemy_vs.append(v)
 
     def _spawn_coin(self) -> pygame.Rect:
         # Keep coin away from top HUD area.
@@ -134,6 +137,8 @@ class Game:
         if self.player.colliderect(self.coin):
             self.score += 1
             self.coin = self._spawn_coin()
+            if self.score % 5 == 0:
+                self._spawn_enemy()
 
         # Collision: player with enemies.
         if self.player.collidelist(self.enemy_rects) != -1:
