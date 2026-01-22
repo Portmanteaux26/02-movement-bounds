@@ -1,0 +1,9 @@
+1/22/26
+- adding scaling difficulty:
+  - first pass was additional enemy spawn on every coin collect event
+    This was an improvement, and served goal, but a little to frantic too quickly
+  - next test was additional enemy spawn every 5 coins
+    An improvement over previous, felt like a good ramp of tension
+  - next test was additional enemy spawn every 10 coins
+    This felt a little too slow; difficulty felt a little stale by coins 8 or 9
+  Locked in adding an enemy every 5 coins.
