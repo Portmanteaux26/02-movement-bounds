@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
+import pygame
 import random
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-
-import pygame
 
 
 @dataclass
@@ -18,8 +18,39 @@ class Colors:
     enemy: tuple[int, int, int] = (191, 97, 106)
     coin: tuple[int, int, int] = (235, 203, 139)
 
-
 COLORS = Colors()
+
+
+class Enemy(ABC):
+    def __init__(self, rect: pygame.Rect, vel: pygame.Vector2, color: tuple[int, int, int]) -> None:
+        self.rect = rect
+        self.vel = vel
+        self.color = color
+
+    @abstractmethod
+    def update(self, dt: float, bounds: pygame.Rect, player: pygame.Rect) -> None:
+        raise NotImplementedError
+
+    def draw(self, screen: pygame.Surface) -> None:
+        pygame.draw.rect(screen, self.color, self.rect, border_radius=8)
+
+class Bouncer(Enemy):
+    def update(self, dt: float, bounds: pygame.Rect, player: pygame.Rect) -> None:
+        self.rect.x += int(self.vel.x * dt)
+        self.rect.y += int(self.vel.y * dt)
+
+        if self.rect.left < bounds.left:
+            self.rect.left = bounds.left
+            self.vel.x *= -1
+        if self.rect.right > bounds.right:
+            self.rect.right = bounds.right
+            self.vel.x *= -1
+        if self.rect.top < bounds.top:
+            self.rect.top = bounds.top
+            self.vel.y *= -1
+        if self.rect.bottom > bounds.bottom:
+            self.rect.bottom = bounds.bottom
+            self.vel.y *= -1
 
 
 class Game:
@@ -59,18 +90,16 @@ class Game:
         self.score = 0
         self.alive_time = 0.0
 
-        self.enemy_rects: list[pygame.Rect] = []
-        self.enemy_vs: list[pygame.Vector2] = []
+        self.enemies: list[Enemy] = []
         for _ in range(3):
-            self._spawn_enemy()
+            self._spawn_bouncer()
 
         self.coin = self._spawn_coin()
 
-    def _spawn_enemy(self) -> None:
+    def _spawn_bouncer(self) -> None:
         r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 36, 36)
         v = pygame.Vector2(random.choice([-1, 1]) * 220, random.choice([-1, 1]) * 180)
-        self.enemy_rects.append(r)
-        self.enemy_vs.append(v)
+        self.enemies.append(Bouncer(r, v, COLORS.enemy))
 
     def _spawn_coin(self) -> pygame.Rect:
         # Keep coin away from top HUD area.
@@ -114,34 +143,20 @@ class Game:
         self.player.y += int(self.player_v.y * dt)
         self.player.clamp_ip(pygame.Rect(0, 60, self.w, self.h - 60))
 
-        # Enemies: bounce around the playfield.
+        # Enemies: update all enemy objects.
         bounds = pygame.Rect(0, 60, self.w, self.h - 60)
-        for i, r in enumerate(self.enemy_rects):
-            v = self.enemy_vs[i]
-            r.x += int(v.x * dt)
-            r.y += int(v.y * dt)
-            if r.left < bounds.left:
-                r.left = bounds.left
-                v.x *= -1
-            if r.right > bounds.right:
-                r.right = bounds.right
-                v.x *= -1
-            if r.top < bounds.top:
-                r.top = bounds.top
-                v.y *= -1
-            if r.bottom > bounds.bottom:
-                r.bottom = bounds.bottom
-                v.y *= -1
+        for e in self.enemies:
+            e.update(dt, bounds, self.player)
 
         # Collision: player with coin.
         if self.player.colliderect(self.coin):
             self.score += 1
             self.coin = self._spawn_coin()
             if self.score % 5 == 0:
-                self._spawn_enemy()
+                self._spawn_bouncer()
 
         # Collision: player with enemies.
-        if self.player.collidelist(self.enemy_rects) != -1:
+        if any(self.player.colliderect(e.rect) for e in self.enemies):
             self.state = "gameover"
             if self.score > self.high_score:
                 self.high_score = self.score
@@ -169,8 +184,8 @@ class Game:
         self._draw_hud()
 
         pygame.draw.rect(self.screen, COLORS.coin, self.coin, border_radius=7)
-        for r in self.enemy_rects:
-            pygame.draw.rect(self.screen, COLORS.enemy, r, border_radius=8)
+        for e in self.enemies:
+            e.draw(self.screen)
         pygame.draw.rect(self.screen, COLORS.player, self.player, border_radius=8)
 
     def _draw_title(self) -> None:
