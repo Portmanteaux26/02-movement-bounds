@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import pygame
+import math
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -14,9 +15,10 @@ class Colors:
     panel: tuple[int, int, int] = (34, 38, 46)
     text: tuple[int, int, int] = (236, 239, 244)
 
-    player: tuple[int, int, int] = (136, 192, 208)
-    enemy: tuple[int, int, int] = (191, 97, 106)
-    coin: tuple[int, int, int] = (235, 203, 139)
+    player: tuple[int, int, int] = (136, 192, 208)  # blue
+    bouncer: tuple[int, int, int] = (191, 97, 106)  # red
+    seeker: tuple[int, int, int] = (180, 142, 173)  # purple
+    coin: tuple[int, int, int] = (235, 203, 139)    # gold
 
 COLORS = Colors()
 
@@ -51,6 +53,38 @@ class Bouncer(Enemy):
         if self.rect.bottom > bounds.bottom:
             self.rect.bottom = bounds.bottom
             self.vel.y *= -1
+
+class Seeker(Enemy):
+    def update(self, dt: float, bounds: pygame.Rect, player: pygame.Rect) -> None:
+        self.rect.x += int(self.vel.x * dt)
+        self.rect.y += int(self.vel.y * dt)
+
+        hit_wall = False
+
+        if self.rect.left < bounds.left:
+            self.rect.left = bounds.left
+            hit_wall = True
+        elif self.rect.right > bounds.right:
+            self.rect.right = bounds.right
+            hit_wall = True
+
+        if self.rect.top < bounds.top:
+            self.rect.top = bounds.top
+            hit_wall = True
+        elif self.rect.bottom > bounds.bottom:
+            self.rect.bottom = bounds.bottom
+            hit_wall = True
+
+        if hit_wall:
+            # change direction toward player
+            speed = self.vel.length()
+            dx = player.centerx - self.rect.centerx
+            dy = player.centery - self.rect.centery
+            dist = math.hypot(dx, dy)
+            if dist != 0:
+                self.vel.x = (dx / dist) * speed
+                self.vel.y = (dy / dist) * speed
+
 
 
 class Game:
@@ -97,9 +131,14 @@ class Game:
         self.coin = self._spawn_coin()
 
     def _spawn_bouncer(self) -> None:
-        r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 36, 36)
+        r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 48, 48)
         v = pygame.Vector2(random.choice([-1, 1]) * 220, random.choice([-1, 1]) * 180)
-        self.enemies.append(Bouncer(r, v, COLORS.enemy))
+        self.enemies.append(Bouncer(r, v, COLORS.bouncer))
+
+    def _spawn_seeker(self) -> None:
+        r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 32, 32)
+        v = pygame.Vector2(random.choice([-1, 1]) * 330, random.choice([-1, 1]) * 180)
+        self.enemies.append(Seeker(r, v, COLORS.seeker))
 
     def _spawn_coin(self) -> pygame.Rect:
         # Keep coin away from top HUD area.
@@ -152,7 +191,9 @@ class Game:
         if self.player.colliderect(self.coin):
             self.score += 1
             self.coin = self._spawn_coin()
-            if self.score % 5 == 0:
+            if self.score % 10 == 0:
+                self._spawn_seeker()
+            elif self.score % 5 == 0:
                 self._spawn_bouncer()
 
         # Collision: player with enemies.
