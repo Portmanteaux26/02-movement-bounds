@@ -104,6 +104,9 @@ class Game:
         self.state: str = "title"  # title | playing | gameover
         self._reset_run()
 
+        self.toast_text = ""
+        self.toast_t = 0.0
+
     def _load_high_score(self) -> int:
         if not self.save_path.exists():
             return 0
@@ -118,6 +121,10 @@ class Game:
             json.dumps({"high_score": int(self.high_score)}, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+
+    def _toast(self, text: str, seconds: float = 0.8) -> None:
+        self.toast_text = text
+        self.toast_t = seconds
 
     def _reset_run(self) -> None:
         self.player = pygame.Rect(self.w // 2 - 16, self.h // 2 - 16, 32, 32)
@@ -167,6 +174,9 @@ class Game:
 
         self.alive_time += dt
 
+        if self.toast_t > 0.0:
+            self.toast_t = max(0.0, self.toast_t - dt)
+
         # Input: map keys -> direction.
         keys = pygame.key.get_pressed()
         input_x = 0.0
@@ -200,8 +210,10 @@ class Game:
             self.coin = self._spawn_coin()
             if self.score % 10 == 0:
                 self._spawn_seeker()
+                self._toast("NEW ENEMY!")
             elif self.score % 5 == 0:
                 self._spawn_bouncer()
+                self._toast("NEW ENEMY!")
 
         # Collision: player with enemies -> lose a life
         if any(self.player.colliderect(e.rect) for e in self.enemies):
@@ -248,6 +260,10 @@ class Game:
 
     def _draw_playing(self) -> None:
         self._draw_hud()
+
+        if self.toast_t > 0.0:
+            surf = self.big_font.render(self.toast_text, True, COLORS.text)
+            self.screen.blit(surf, (self.w / 2 - surf.get_width() / 2, 90))
 
         pygame.draw.rect(self.screen, COLORS.coin, self.coin, border_radius=7)
         for e in self.enemies:
