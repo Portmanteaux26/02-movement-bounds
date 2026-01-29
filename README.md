@@ -25,6 +25,7 @@ Writes `save.json` (high score only). Delete it to reset.
 ## This week
 - New enemy type: seekers
 - Lives system
+- Toasts
 
 ## Design decisions
 Seeker
