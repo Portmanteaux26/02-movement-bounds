@@ -7,3 +7,19 @@
   - next test was additional enemy spawn every 10 coins
     This felt a little too slow; difficulty felt a little stale by coins 8 or 9
   Locked in adding an enemy every 5 coins.
+
+1/29/26
+- adding new enemy type (seekers):
+  - initial spawn behavior was every 10 coins collected
+    So every 5th coin spawns a bouncer, every 10th a seeker
+    This felt good immediately, small difficult ramp on %5, much bigger on %10 coins
+  - initial behavior was to redirect to player's current pos whenever touching a wall
+    This also felt fun immediately, will experiment with different behaviors in later updates though
+  - initial speed was same as bouncers
+    This felt way too slow, felt like just another bouncer in most cases
+  - increase speed to match player
+    This felt much better, gave the seeker a much more defined identity
+    Adjusted seeker and bouncer sizes to further differentiate them
+- adding lives system
+  - inital value of 3
+    Feels good so far, will investigate possible invulnerability period in future updates
