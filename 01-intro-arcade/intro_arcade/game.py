@@ -21,6 +21,8 @@ class Colors:
     coin: tuple[int, int, int] = (235, 203, 139)    # gold
 
 COLORS = Colors()
+LIFE_SIZE = 14
+LIFE_SPACING = 6
 
 
 class Enemy(ABC):
@@ -123,6 +125,7 @@ class Game:
 
         self.score = 0
         self.alive_time = 0.0
+        self.lives = 3
 
         self.enemies: list[Enemy] = []
         for _ in range(3):
@@ -130,14 +133,18 @@ class Game:
 
         self.coin = self._spawn_coin()
 
+    def _respawn_player(self) -> None:
+        self.player.center = (self.w // 2, 60 + (self.h - 60) // 2)
+        self.player_v.update(0, 0)
+
     def _spawn_bouncer(self) -> None:
         r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 48, 48)
-        v = pygame.Vector2(random.choice([-1, 1]) * 220, random.choice([-1, 1]) * 180)
+        v = pygame.Vector2(random.choice([-1, 1]) * 225, random.choice([-1, 1]) * 225)
         self.enemies.append(Bouncer(r, v, COLORS.bouncer))
 
     def _spawn_seeker(self) -> None:
         r = pygame.Rect(random.randrange(40, self.w - 40), random.randrange(80, self.h - 40), 32, 32)
-        v = pygame.Vector2(random.choice([-1, 1]) * 330, random.choice([-1, 1]) * 180)
+        v = pygame.Vector2(random.choice([-1, 1]) * 360, random.choice([-1, 1]) * 360)
         self.enemies.append(Seeker(r, v, COLORS.seeker))
 
     def _spawn_coin(self) -> pygame.Rect:
@@ -196,12 +203,18 @@ class Game:
             elif self.score % 5 == 0:
                 self._spawn_bouncer()
 
-        # Collision: player with enemies.
+        # Collision: player with enemies -> lose a life
         if any(self.player.colliderect(e.rect) for e in self.enemies):
-            self.state = "gameover"
-            if self.score > self.high_score:
-                self.high_score = self.score
-                self._save_high_score()
+            self.lives -= 1
+
+            if self.lives > 0:
+                self._respawn_player()
+                return
+            else:
+                self.state = "gameover"
+                if self.score > self.high_score:
+                    self.high_score = self.score
+                    self._save_high_score()
 
     def draw(self) -> None:
         self.screen.fill(COLORS.bg)
@@ -214,12 +227,24 @@ class Game:
             self._draw_gameover()
 
     def _draw_hud(self) -> None:
-        panel = pygame.Rect(12, 12, 420, 40)
+        panel = pygame.Rect(12, 12, 520, 40)
         pygame.draw.rect(self.screen, COLORS.panel, panel, border_radius=10)
 
-        text = f"Score: {self.score}    High: {self.high_score}"
+        # Lives (left)
+        x = panel.x + 12
+        y = panel.y + panel.height // 2 - LIFE_SIZE // 2
+        for _ in range(self.lives):
+            pygame.draw.rect(self.screen, COLORS.player, pygame.Rect(x, y, LIFE_SIZE, LIFE_SIZE), border_radius=4)
+            x += LIFE_SIZE + LIFE_SPACING
+
+        # Score (right)
+        text = f"Score: {self.score}  High: {self.high_score}"
         surf = self.font.render(text, True, COLORS.text)
-        self.screen.blit(surf, (panel.x + 12, panel.y + 12))
+
+        right_pad = 12
+        text_x = panel.right - right_pad - surf.get_width()
+        text_y = panel.y + panel.height // 2 - surf.get_height() // 2
+        self.screen.blit(surf, (text_x, text_y))
 
     def _draw_playing(self) -> None:
         self._draw_hud()

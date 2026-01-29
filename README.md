@@ -1,14 +1,11 @@
-# Intro Arcade (Week 1 in-class build)
+# Intro Arcade (Week 2 update)
 
-A simple first-week game to introduce Python + Pygame fundamentals.
-
-## Learning goals
-- Pygame setup: window, clock, main loop
-- Events + input handling
-- Game state: title → playing → game over
-- Update/draw separation and delta time (`dt`)
-- Simple collision using `pygame.Rect`
-- Score + high score saved to `save.json`
+## Game rules
+- Collect coins to score
+- Avoid obstacles or lose a life
+- Game ends when you lose 3 lives
+- The more coins you collect, the more obstacles will appear
+- Some obstacles may follow you!
 
 ## Run
 
@@ -24,3 +21,7 @@ python main.py
 
 ## Save data
 Writes `save.json` (high score only). Delete it to reset.
+
+## This week
+- New enemy type: seekers
+- Lives system
