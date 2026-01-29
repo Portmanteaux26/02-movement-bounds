@@ -37,3 +37,6 @@ Lives
 - Extends gameplay by allowing mistakes before reset
 - Smooths learning curve, as difficulty ramps, lives will be spent less frequently on early stages
 - HUD element communicates system quickly and provides visual feedback on mistakes
+
+Toasts
+- Provides player with simple indicator for game state changes
