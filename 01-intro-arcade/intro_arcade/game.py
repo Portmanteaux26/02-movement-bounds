@@ -172,6 +172,7 @@ class Game:
         if self.state != "playing":
             return
 
+        dt = min(dt, 0.05)
         self.alive_time += dt
 
         if self.toast_t > 0.0:
