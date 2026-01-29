@@ -31,6 +31,7 @@ Seeker
 - "Follow" player's movement, also much faster than bouncer
 - Forces player to keep moving, makes staying still more dangerous
 - Also creates focal points for attention, making bouncers more dangerous even for experienced players
+
 Lives
 - Extends gameplay by allowing mistakes before reset
 - Smooths learning curve, as difficulty ramps, lives will be spent less frequently on early stages
